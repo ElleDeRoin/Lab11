@@ -6,34 +6,28 @@ using UnityEngine;
 public class Task3 : MonoBehaviour
 {
     public int maxDeckSize = 16;
-    public int currentDeckSize = 16;
+    public int currentDeckSize;
     public int minDeckSize = 0;
     public int handSize = 4;
+
     bool gameWon = false;
 
+    List<(string rank, string suit)> deck = new();
+    List<(string rank, string suit)> hand = new();
 
-    Dictionary<string, string> Cards = new()
-{
-    { "K", "\u2665" },
-    { "K", "\u2660" },
-    { "K", "\u2666" },
-    { "K", "\u2663" },
-    { "Q", "\u2665" },
-    { "Q", "\u2660" },
-    { "Q", "\u2666" },
-    { "Q", "\u2663" },
-    { "A", "\u2665" },
-    { "A", "\u2660" },
-    { "A", "\u2666" },
-    { "A", "\u2663" },
-    { "J", "\u2665" },
-    { "J", "\u2660" },
-    { "J", "\u2666" },
-    { "J", "\u2663" },
-};
+    void Awake()
+    {
+        string[] ranks = { "K", "Q", "A", "J" };
+        string[] suits = { "\u2665", "\u2660", "\u2666", "\u2663" };
 
-
-
+        foreach (var rank in ranks)
+        {
+            foreach (var suit in suits)
+            {
+                deck.Add((rank, suit));
+            }
+        }
+    }
 
     void Start()
     {
@@ -43,46 +37,100 @@ public class Task3 : MonoBehaviour
 
     void StartingHand()
     {
-        //shuffleCards();
-        //give first 4 cards
-        //subtract 4 cards from current deck size
+        shuffleCards();
+
+        for (int i = 0; i < handSize; i++)
+        {
+            hand.Add(deck[0]);
+            deck.RemoveAt(0);
+        }
+
+        currentDeckSize = deck.Count;
+
+        Debug.Log("Starting Hand:");
+        DebugHand();
     }
 
     void Turn()
     {
-        while (currentDeckSize > minDeckSize && (!gameWon))
+        while (currentDeckSize > minDeckSize && !gameWon)
         {
-
-            //discard a random card from hand and draw another from deck
-            // currentDeckSize -= 1;
-            //debug log current hand
-
-            //checkWin()
-
-            //if game won gameWon = true break gameWin()
-            //if out of cards break loss gameLoss()
-
-            //if not won debug.log("This is not a winning hand. I will attempt to play another round.")
+ 
+            int removeIndex = Random.Range(0, hand.Count);
+            hand.RemoveAt(removeIndex);
 
 
+            if (deck.Count > 0)
+            {
+                hand.Add(deck[0]);
+                deck.RemoveAt(0);
+                currentDeckSize--;
+            }
+
+            DebugHand();
+
+            checkWin();
+
+            if (gameWon)
+            {
+                gameWin();
+                return;
+            }
+
+            if (currentDeckSize == 0)
+            {
+                gameLoss();
+                return;
+            }
+
+            Debug.Log("This is not a winning hand. Trying another round...");
         }
     }
+
     void checkWin()
     {
-        //check if at least 3 of the cards are the same suit
-        // if yes gameWon = true
-        //if no continue Turn();
+        var suitGroups = hand.GroupBy(card => card.suit);
+
+        foreach (var group in suitGroups)
+        {
+            if (group.Count() >= 3)
+            {
+                gameWon = true;
+                return;
+            }
+        }
     }
+
     void gameWin()
     {
         Debug.Log("The game is WON");
     }
+
     void gameLoss()
     {
         Debug.Log("The deck is empty. The game is LOST");
     }
+
     void shuffleCards()
     {
+        for (int i = 0; i < deck.Count; i++)
+        {
+            int randomIndex = Random.Range(i, deck.Count);
+            var temp = deck[i];
+            deck[i] = deck[randomIndex];
+            deck[randomIndex] = temp;
+        }
+    }
 
+    void DebugHand()
+    {
+        string handString = "Hand: ";
+
+        foreach (var card in hand)
+        {
+            handString += $"{card.rank}{card.suit} ";
+        }
+
+        Debug.Log(handString);
     }
 }
